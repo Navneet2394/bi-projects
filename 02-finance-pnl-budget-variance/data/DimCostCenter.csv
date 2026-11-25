@@ -1,0 +1,9 @@
+CostCenterKey,CostCenter,Region,Division,Owner
+1,Retail North,North,Retail,A. Mehta
+2,Retail West,West,Retail,R. Iyer
+3,Retail South,South,Retail,S. Rao
+4,Retail East,East,Retail,P. Das
+5,E-Commerce,Online,Digital,K. Shah
+6,Corporate Finance,,Corporate,N. Gupta
+7,Corporate IT,,Corporate,V. Nair
+8,Marketing HQ,,Corporate,L. Kapoor

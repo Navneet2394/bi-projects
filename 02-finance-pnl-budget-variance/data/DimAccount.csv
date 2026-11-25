@@ -1,0 +1,14 @@
+AccountKey,AccountName,AccountGroup,GroupSort,PnLSign,NaturalSign
+4000,Product Sales (Gross),Revenue,1,1,1
+4100,Extended Warranty & Services,Revenue,1,1,1
+4900,Returns & Allowances,Revenue,1,1,-1
+5000,Cost of Goods Sold,COGS,2,-1,1
+5100,Freight & Fulfilment,COGS,2,-1,1
+6000,Salaries & Wages,Operating Expenses,3,-1,1
+6100,Rent & Utilities,Operating Expenses,3,-1,1
+6200,Marketing & Promotions,Operating Expenses,3,-1,1
+6300,IT & Software,Operating Expenses,3,-1,1
+6400,Travel & Admin,Operating Expenses,3,-1,1
+7000,Depreciation,D&A,4,-1,1
+8000,Interest Expense,Finance Cost,5,-1,1
+9000,Income Tax,Tax,6,-1,1

@@ -1,0 +1,127 @@
+// =====================================================================
+//  Project 02 · Finance P&L · Budget vs Actual vs Forecast
+//  Model: FactFinance (DateKey, AccountKey, CostCenterKey, Scenario, Amount)
+//         DimDate, DimAccount, DimCostCenter, DimScenario, PnLLayout (disconnected)
+//  Sign convention: Amount is stored positive. Signed amount =
+//      Amount * DimAccount[PnLSign] * DimAccount[NaturalSign]
+//  so revenue is positive, costs and returns are negative, and a plain SUM
+//  of the signed amount gives profit at any subtotal.
+// =====================================================================
+
+// ---------------------------------------------------------------- [1 Base]
+Amount (Signed) =
+SUMX (
+    FactFinance,
+    FactFinance[Amount]
+        * RELATED ( DimAccount[PnLSign] )
+        * RELATED ( DimAccount[NaturalSign] )
+)
+
+Actual =
+CALCULATE ( [Amount (Signed)], DimScenario[Scenario] = "Actual" )
+
+Budget =
+CALCULATE ( [Amount (Signed)], DimScenario[Scenario] = "Budget" )
+
+Forecast =
+CALCULATE ( [Amount (Signed)], DimScenario[Scenario] = "Forecast" )
+
+// ---------------------------------------------------------------- [2 Variance]
+// Because costs are negative, Actual - Budget is automatically "favourable
+// when positive" for every line, so no per-line sign logic is needed.
+Var vs Budget =
+[Actual] - [Budget]
+
+Var vs Budget % =
+DIVIDE ( [Var vs Budget], ABS ( [Budget] ) )
+
+Var vs Forecast =
+[Actual] - [Forecast]
+
+Variance Flag =
+SWITCH (
+    TRUE (),
+    ISBLANK ( [Budget] ), BLANK (),
+    [Var vs Budget %] >= 0, "Favourable",
+    [Var vs Budget %] >= -0.03, "Watch",
+    "Adverse"
+)
+
+Variance Colour =
+SWITCH ( [Variance Flag], "Favourable", "#1B7F5B", "Watch", "#C98A00", "Adverse", "#C23B3B" )
+
+// ---------------------------------------------------------------- [3 P&L statement with subtotals]
+// PnLLayout is a disconnected table (see powerquery/queries.pq):
+//   LineSort | Line              | LineType  | GroupSort
+//   1        | Revenue           | Group     | 1
+//   2        | COGS              | Group     | 2
+//   3        | Gross Profit      | Subtotal  | 2
+//   4        | Operating Expenses| Group     | 3
+//   5        | EBITDA            | Subtotal  | 3
+//   6        | D&A               | Group     | 4
+//   7        | EBIT              | Subtotal  | 4
+//   8        | Finance Cost      | Group     | 5
+//   9        | Profit Before Tax | Subtotal  | 5
+//   10       | Tax               | Group     | 6
+//   11       | Net Income        | Subtotal  | 6
+// Put PnLLayout[Line] (sorted by LineSort) on matrix rows and this measure in values.
+PnL Value =
+VAR LineType = SELECTEDVALUE ( PnLLayout[LineType] )
+VAR G = SELECTEDVALUE ( PnLLayout[GroupSort] )
+RETURN
+    SWITCH (
+        LineType,
+        "Group",    CALCULATE ( [Actual], DimAccount[GroupSort] = G ),
+        "Subtotal", CALCULATE ( [Actual], DimAccount[GroupSort] <= G )
+    )
+
+PnL Budget =
+VAR LineType = SELECTEDVALUE ( PnLLayout[LineType] )
+VAR G = SELECTEDVALUE ( PnLLayout[GroupSort] )
+RETURN
+    SWITCH (
+        LineType,
+        "Group",    CALCULATE ( [Budget], DimAccount[GroupSort] = G ),
+        "Subtotal", CALCULATE ( [Budget], DimAccount[GroupSort] <= G )
+    )
+
+PnL Var % =
+DIVIDE ( [PnL Value] - [PnL Budget], ABS ( [PnL Budget] ) )
+
+// Margin lines, e.g. Gross Margin %, EBITDA %
+PnL % of Revenue =
+DIVIDE ( [PnL Value], CALCULATE ( [Actual], DimAccount[AccountGroup] = "Revenue" ) )
+
+// ---------------------------------------------------------------- [4 KPIs]
+Revenue =
+CALCULATE ( [Actual], DimAccount[AccountGroup] = "Revenue" )
+
+Gross Profit =
+CALCULATE ( [Actual], DimAccount[GroupSort] <= 2 )
+
+EBITDA =
+CALCULATE ( [Actual], DimAccount[GroupSort] <= 3 )
+
+Net Income =
+CALCULATE ( [Actual], DimAccount[GroupSort] <= 6 )
+
+Net Income Budget =
+CALCULATE ( [Budget], DimAccount[GroupSort] <= 6 )
+
+EBITDA Margin % =
+DIVIDE ( [EBITDA], [Revenue] )
+
+Net Margin % =
+DIVIDE ( [Net Income], [Revenue] )
+
+// Full-year outlook: actuals for closed months + forecast for the open months
+Latest Estimate =
+VAR LastClosedMonth = DATE ( 2025, 6, 30 )   // replace with a parameter / control table in production
+RETURN
+    CALCULATE ( [Actual], DimDate[Date] <= LastClosedMonth )
+        + CALCULATE ( [Forecast], DimDate[Date] > LastClosedMonth )
+
+// ---------------------------------------------------------------- [5 Waterfall (Budget → Actual bridge)]
+// Use a waterfall visual with DimAccount[AccountGroup] on Category and this on Y.
+Bridge Variance =
+[Var vs Budget]
