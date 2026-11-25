@@ -1,0 +1,126 @@
+// =====================================================================
+//  Project 03 · Supply Chain · OTIF, Supplier Scorecard, Inventory
+//  Model: FactPurchaseOrderLine (OrderDateKey → DimDate active;
+//         PromisedDate / ReceivedDate → DimDate[Date] INACTIVE relationships)
+//         FactInventorySnapshot (month-end, semi-additive)
+//         DimSupplier, DimProduct, DimWarehouse, DimDate
+//  FactInventorySnapshot carries SafetyStockUnits and IsBelowSafetyStock (merged in Power Query)
+// =====================================================================
+
+// ---------------------------------------------------------------- [1 Columns created upstream]
+// IsOnTime, IsInFull and DaysLate are created in Power Query (and in the SQL view scm.vPurchaseOrderLine).
+// Their logic, for reference:
+// IsOnTime  = FactPurchaseOrderLine[ReceivedDate] <= FactPurchaseOrderLine[PromisedDate]
+// IsInFull  = FactPurchaseOrderLine[ReceivedQty] >= FactPurchaseOrderLine[OrderedQty]
+// DaysLate  = MAX ( 0, INT ( FactPurchaseOrderLine[ReceivedDate] - FactPurchaseOrderLine[PromisedDate] ) )
+
+// ---------------------------------------------------------------- [2 OTIF]
+PO Lines =
+COUNTROWS ( FactPurchaseOrderLine )
+
+On Time % =
+DIVIDE ( CALCULATE ( [PO Lines], FactPurchaseOrderLine[IsOnTime] = TRUE () ), [PO Lines] )
+
+In Full % =
+DIVIDE ( CALCULATE ( [PO Lines], FactPurchaseOrderLine[IsInFull] = TRUE () ), [PO Lines] )
+
+OTIF % =
+DIVIDE (
+    CALCULATE (
+        [PO Lines],
+        FactPurchaseOrderLine[IsOnTime] = TRUE (),
+        FactPurchaseOrderLine[IsInFull] = TRUE ()
+    ),
+    [PO Lines]
+)
+
+OTIF Target =
+0.90
+
+OTIF Gap (pp) =
+( [OTIF %] - [OTIF Target] ) * 100
+
+Fill Rate % =
+DIVIDE ( SUM ( FactPurchaseOrderLine[ReceivedQty] ), SUM ( FactPurchaseOrderLine[OrderedQty] ) )
+
+Avg Days Late (late lines only) =
+CALCULATE ( AVERAGE ( FactPurchaseOrderLine[DaysLate] ), FactPurchaseOrderLine[DaysLate] > 0 )
+
+PO Spend =
+SUM ( FactPurchaseOrderLine[LineValue] )
+
+// OTIF by the date goods were PROMISED (uses the inactive relationship)
+OTIF % by Promised Date =
+CALCULATE (
+    [OTIF %],
+    USERELATIONSHIP ( FactPurchaseOrderLine[PromisedDate], DimDate[Date] )
+)
+
+OTIF % PY =
+CALCULATE ( [OTIF %], SAMEPERIODLASTYEAR ( DimDate[Date] ) )
+
+OTIF % Rolling 3M =
+CALCULATE ( [OTIF %], DATESINPERIOD ( DimDate[Date], MAX ( DimDate[Date] ), -3, MONTH ) )
+
+// ---------------------------------------------------------------- [3 Supplier scorecard]
+Supplier Score =
+// Weighted score 0-100: 60% OTIF, 25% fill rate, 15% lateness penalty
+VAR Lateness = COALESCE ( [Avg Days Late (late lines only)], 0 )
+RETURN
+    ROUND (
+        100 * ( 0.60 * [OTIF %] + 0.25 * [Fill Rate %] + 0.15 * MAX ( 0, 1 - Lateness / 10 ) ),
+        1
+    )
+
+Supplier Rank =
+IF (
+    ISINSCOPE ( DimSupplier[SupplierName] ),
+    RANKX ( ALLSELECTED ( DimSupplier[SupplierName] ), [Supplier Score], , DESC, DENSE )
+)
+
+Supplier Risk Band =
+SWITCH ( TRUE (), [OTIF %] >= 0.90, "Low", [OTIF %] >= 0.80, "Medium", "High" )
+
+Spend at Risk =
+// Spend with suppliers whose OTIF is below 75% in the current filter context
+CALCULATE ( [PO Spend], FILTER ( VALUES ( DimSupplier[SupplierName] ), [OTIF %] < 0.75 ) )
+
+// ---------------------------------------------------------------- [4 Inventory (semi-additive)]
+// Snapshot facts must NOT be summed across time: take the last snapshot in the period.
+On Hand Units =
+VAR LastSnap =
+    CALCULATE ( MAX ( FactInventorySnapshot[SnapshotDateKey] ) )
+RETURN
+    CALCULATE (
+        SUM ( FactInventorySnapshot[OnHandUnits] ),
+        FactInventorySnapshot[SnapshotDateKey] = LastSnap
+    )
+
+Inventory Value =
+VAR LastSnap =
+    CALCULATE ( MAX ( FactInventorySnapshot[SnapshotDateKey] ) )
+RETURN
+    CALCULATE (
+        SUMX ( FactInventorySnapshot, FactInventorySnapshot[OnHandUnits] * RELATED ( DimProduct[UnitCost] ) ),
+        FactInventorySnapshot[SnapshotDateKey] = LastSnap
+    )
+
+Stock-out Risk % =
+// Share of item×warehouse positions below safety stock at the last snapshot
+VAR LastSnap =
+    CALCULATE ( MAX ( FactInventorySnapshot[SnapshotDateKey] ) )
+VAR Positions =
+    CALCULATETABLE ( FactInventorySnapshot, FactInventorySnapshot[SnapshotDateKey] = LastSnap )
+RETURN
+    DIVIDE (
+        COUNTROWS ( FILTER ( Positions, FactInventorySnapshot[IsBelowSafetyStock] ) ),
+        COUNTROWS ( Positions )
+    )
+
+Average Inventory Value (12M) =
+AVERAGEX (
+    DATESINPERIOD ( DimDate[Date], MAX ( DimDate[Date] ), -12, MONTH ),
+    CALCULATE ( [Inventory Value] )
+)
+// Note: AVERAGEX over days returns blanks for non-snapshot days; AVERAGEX ignores blanks,
+// so the result is the average of the month-end snapshots in the window.

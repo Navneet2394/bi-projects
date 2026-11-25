@@ -1,0 +1,6 @@
+WarehouseKey,Warehouse,Region,CapacityUnits
+1,DC Delhi,North,60000
+2,DC Mumbai,West,70000
+3,DC Bengaluru,South,65000
+4,DC Kolkata,East,35000
+5,DC Bengaluru E-Com,Online,80000

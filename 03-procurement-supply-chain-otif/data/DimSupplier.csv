@@ -1,0 +1,15 @@
+SupplierKey,SupplierName,Country,Category,Tier,ContractLeadTimeDays
+1,Shenzhen Brightway Electronics,China,Electronics,Strategic,35
+2,Hanoi Digital Components,Vietnam,Electronics,Preferred,30
+3,Pune Tech Distributors,India,Electronics,Strategic,7
+4,Delhi Gadget Wholesale,India,Electronics,Transactional,6
+5,Ningbo HomeWorks,China,Home,Preferred,40
+6,Jodhpur Woodcraft,India,Home,Strategic,14
+7,Moradabad Kitchenware,India,Home,Preferred,10
+8,Tiruppur Apparel Mills,India,Fashion,Strategic,12
+9,Dhaka Garments Export,Bangladesh,Fashion,Preferred,28
+10,Agra Footwear Co,India,Fashion,Transactional,9
+11,Annapurna Foods,India,Grocery,Strategic,3
+12,Kolkata FMCG Traders,India,Grocery,Transactional,4
+13,Herbana Naturals,India,Beauty,Preferred,8
+14,Seoul Beauty Labs,South Korea,Beauty,Preferred,25
