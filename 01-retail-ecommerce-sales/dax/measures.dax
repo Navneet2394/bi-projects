@@ -1,0 +1,201 @@
+// =====================================================================
+//  Project 01 · Retail Sales & Profitability · DAX Measure Library
+//  Model: FactSales, FactSalesTarget, DimDate (marked as date table),
+//         DimProduct, DimStore, DimCustomer, SecurityUserRegion
+//  Convention: measures live in a dedicated "_Measures" table and are
+//  grouped by Display Folder (shown in comments as  // [Folder]).
+//  Paste each measure into Power BI Desktop > New measure, or load the
+//  whole file at once with Tabular Editor (C# script in docs/BUILD_GUIDE.md).
+// =====================================================================
+
+// ---------------------------------------------------------------- [1 Base]
+Gross Sales =
+SUM ( FactSales[SalesAmount] )
+
+Returned Sales =
+CALCULATE ( [Gross Sales], FactSales[IsReturned] = TRUE () )
+
+Net Sales =
+[Gross Sales] - [Returned Sales]
+
+Net Cost =
+CALCULATE ( SUM ( FactSales[CostAmount] ), FactSales[IsReturned] = FALSE () )
+
+Gross Margin =
+[Net Sales] - [Net Cost]
+
+Gross Margin % =
+DIVIDE ( [Gross Margin], [Net Sales] )
+
+Units Sold =
+CALCULATE ( SUM ( FactSales[Quantity] ), FactSales[IsReturned] = FALSE () )
+
+Orders =
+DISTINCTCOUNT ( FactSales[OrderNumber] )
+
+Average Order Value =
+DIVIDE ( [Net Sales], [Orders] )
+
+Return Rate % =
+DIVIDE ( [Returned Sales], [Gross Sales] )
+
+Discount Given =
+SUMX ( FactSales, FactSales[Quantity] * FactSales[UnitPrice] * FactSales[DiscountPct] )
+
+Effective Discount % =
+DIVIDE ( [Discount Given], [Gross Sales] + [Discount Given] )
+
+// ---------------------------------------------------------------- [2 Time Intelligence]
+// Requires DimDate marked as Date Table and FactSales[OrderDateKey] -> DimDate[DateKey]
+Net Sales YTD =
+TOTALYTD ( [Net Sales], DimDate[Date] )
+
+Net Sales FYTD =
+// Fiscal year ends 31 March
+TOTALYTD ( [Net Sales], DimDate[Date], "3/31" )
+
+Net Sales PY =
+CALCULATE ( [Net Sales], SAMEPERIODLASTYEAR ( DimDate[Date] ) )
+
+Net Sales YoY =
+[Net Sales] - [Net Sales PY]
+
+Net Sales YoY % =
+DIVIDE ( [Net Sales YoY], [Net Sales PY] )
+
+Net Sales MTD =
+TOTALMTD ( [Net Sales], DimDate[Date] )
+
+Net Sales Rolling 3M =
+CALCULATE (
+    [Net Sales],
+    DATESINPERIOD ( DimDate[Date], MAX ( DimDate[Date] ), -3, MONTH )
+)
+
+Net Sales Rolling 12M =
+CALCULATE (
+    [Net Sales],
+    DATESINPERIOD ( DimDate[Date], MAX ( DimDate[Date] ), -12, MONTH )
+)
+
+// Stops lines from running to zero after the last date that has data
+Net Sales (to last data date) =
+VAR LastDataDate =
+    CALCULATE ( MAX ( FactSales[OrderDateKey] ), REMOVEFILTERS () )
+RETURN
+    IF ( MIN ( DimDate[DateKey] ) <= LastDataDate, [Net Sales] )
+
+// ---------------------------------------------------------------- [3 Target]
+// FactSalesTarget is at Month x Store x Category grain.
+// Relationships: FactSalesTarget[StoreKey] -> DimStore; MonthStartDate -> DimDate[Date].
+// Category has no product-level key, so the filter is passed with TREATAS.
+Target =
+CALCULATE (
+    SUM ( FactSalesTarget[TargetAmount] ),
+    TREATAS ( VALUES ( DimProduct[Category] ), FactSalesTarget[Category] )
+)
+
+Target Attainment % =
+DIVIDE ( [Net Sales], [Target] )
+
+Target Gap =
+[Net Sales] - [Target]
+
+Target Status Colour =
+// Used in conditional formatting > Field value
+SWITCH (
+    TRUE (),
+    ISBLANK ( [Target] ), "#9AA0A6",
+    [Target Attainment %] >= 1, "#1B7F5B",
+    [Target Attainment %] >= 0.95, "#C98A00",
+    "#C23B3B"
+)
+
+// ---------------------------------------------------------------- [4 Customer]
+Active Customers =
+// Excludes the Unknown member (guest checkouts, CustomerKey = -1)
+CALCULATE ( DISTINCTCOUNT ( FactSales[CustomerKey] ), FactSales[CustomerKey] <> -1 )
+
+New Customers =
+// Customers whose first-ever purchase falls in the current filter period
+VAR CurrentCustomers = VALUES ( FactSales[CustomerKey] )
+VAR PeriodStart = MIN ( DimDate[Date] )
+RETURN
+    COUNTROWS (
+        FILTER (
+            CurrentCustomers,
+            CALCULATE (
+                MIN ( FactSales[OrderDateKey] ),
+                REMOVEFILTERS ( DimDate )
+            ) >= VALUE ( FORMAT ( PeriodStart, "YYYYMMDD" ) )
+        )
+    )
+
+Returning Customers =
+[Active Customers] - [New Customers]
+
+Orders per Customer =
+DIVIDE ( CALCULATE ( [Orders], FactSales[CustomerKey] <> -1 ), [Active Customers] )
+
+Sales per Customer =
+DIVIDE ( [Net Sales], [Active Customers] )
+
+// ---------------------------------------------------------------- [5 Ranking & Pareto]
+Product Rank (Net Sales) =
+IF (
+    ISINSCOPE ( DimProduct[ProductName] ),
+    RANKX ( ALLSELECTED ( DimProduct[ProductName] ), [Net Sales], , DESC, DENSE )
+)
+
+Cumulative Sales % (Pareto) =
+VAR CurrentSales = [Net Sales]
+VAR AllProducts =
+    ADDCOLUMNS ( ALLSELECTED ( DimProduct[ProductName] ), "@s", [Net Sales] )
+VAR Cum =
+    SUMX ( FILTER ( AllProducts, [@s] >= CurrentSales ), [@s] )
+RETURN
+    DIVIDE ( Cum, SUMX ( AllProducts, [@s] ) )
+
+ABC Class =
+VAR p = [Cumulative Sales % (Pareto)]
+RETURN
+    SWITCH ( TRUE (), ISBLANK ( p ), BLANK (), p <= 0.8, "A", p <= 0.95, "B", "C" )
+
+Top N Products Sales =
+// Pair with a "Top N" what-if parameter table: TopN[TopN Value]
+VAR N = SELECTEDVALUE ( 'TopN'[TopN Value], 10 )
+VAR TopProducts =
+    TOPN ( N, ALLSELECTED ( DimProduct[ProductName] ), [Net Sales], DESC )
+RETURN
+    CALCULATE ( [Net Sales], KEEPFILTERS ( TopProducts ) )
+
+// ---------------------------------------------------------------- [6 Dynamic / UX]
+Selected Period Label =
+VAR mn = MIN ( DimDate[Date] )
+VAR mx = MAX ( DimDate[Date] )
+RETURN
+    FORMAT ( mn, "dd MMM yyyy" ) & " – " & FORMAT ( mx, "dd MMM yyyy" )
+
+KPI Card Subtitle =
+VAR y = [Net Sales YoY %]
+RETURN
+    IF (
+        ISBLANK ( y ), "No prior-year data",
+        IF ( y >= 0, "▲ ", "▼ " ) & FORMAT ( ABS ( y ), "0.0%" ) & " vs PY"
+    )
+
+// Field-parameter-style measure switch (works without field parameters too)
+// Create a disconnected table: MetricSelector = DATATABLE("Metric",STRING,"Sort",INTEGER,{{"Net Sales",1},{"Gross Margin",2},{"Units",3},{"Orders",4}})
+Selected Metric =
+SWITCH (
+    SELECTEDVALUE ( MetricSelector[Metric], "Net Sales" ),
+    "Net Sales", [Net Sales],
+    "Gross Margin", [Gross Margin],
+    "Units", [Units Sold],
+    "Orders", [Orders]
+)
+
+// ---------------------------------------------------------------- [7 RLS helper]
+// Used only for testing/display; the actual RLS filter is in docs/RLS.md
+Current User =
+USERPRINCIPALNAME ()

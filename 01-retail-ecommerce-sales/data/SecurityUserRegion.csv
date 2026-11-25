@@ -1,0 +1,7 @@
+UserPrincipalName,Region
+rm.north@northwind.example,North
+rm.west@northwind.example,West
+rm.south@northwind.example,South
+rm.east@northwind.example,East
+rm.online@northwind.example,Online
+cfo@northwind.example,ALL

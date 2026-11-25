@@ -1,0 +1,24 @@
+StoreKey,StoreCode,StoreName,City,Region,Format,OpenDate,RegionalManagerEmail
+1,ST-001,Delhi Flagship,Delhi,North,Flagship,2013-04-01,rm.north@northwind.example
+2,ST-002,Delhi Express,Delhi,North,Express,2018-10-01,rm.north@northwind.example
+3,ST-003,Chandigarh Flagship,Chandigarh,North,Flagship,2019-08-01,rm.north@northwind.example
+4,ST-004,Chandigarh Express,Chandigarh,North,Express,2020-04-01,rm.north@northwind.example
+5,ST-005,Lucknow Flagship,Lucknow,North,Flagship,2017-08-01,rm.north@northwind.example
+6,ST-006,Lucknow Express,Lucknow,North,Express,2015-06-01,rm.north@northwind.example
+7,ST-007,Mumbai Flagship,Mumbai,West,Flagship,2018-11-01,rm.west@northwind.example
+8,ST-008,Mumbai Express,Mumbai,West,Express,2020-04-01,rm.west@northwind.example
+9,ST-009,Pune Flagship,Pune,West,Flagship,2018-10-01,rm.west@northwind.example
+10,ST-010,Pune Express,Pune,West,Express,2020-08-01,rm.west@northwind.example
+11,ST-011,Ahmedabad Flagship,Ahmedabad,West,Flagship,2013-09-01,rm.west@northwind.example
+12,ST-012,Ahmedabad Express,Ahmedabad,West,Express,2013-05-01,rm.west@northwind.example
+13,ST-013,Bengaluru Flagship,Bengaluru,South,Flagship,2016-09-01,rm.south@northwind.example
+14,ST-014,Bengaluru Express,Bengaluru,South,Express,2013-09-01,rm.south@northwind.example
+15,ST-015,Chennai Flagship,Chennai,South,Flagship,2013-05-01,rm.south@northwind.example
+16,ST-016,Chennai Express,Chennai,South,Express,2013-01-01,rm.south@northwind.example
+17,ST-017,Hyderabad Flagship,Hyderabad,South,Flagship,2014-12-01,rm.south@northwind.example
+18,ST-018,Hyderabad Express,Hyderabad,South,Express,2017-09-01,rm.south@northwind.example
+19,ST-019,Kolkata Flagship,Kolkata,East,Flagship,2014-03-01,rm.east@northwind.example
+20,ST-020,Kolkata Express,Kolkata,East,Express,2020-09-01,rm.east@northwind.example
+21,ST-021,Bhubaneswar Flagship,Bhubaneswar,East,Flagship,2016-04-01,rm.east@northwind.example
+22,ST-022,Bhubaneswar Express,Bhubaneswar,East,Express,2019-06-01,rm.east@northwind.example
+23,ST-ONL,Northwind Online Store,Online,Online,Online,2019-04-01,rm.online@northwind.example
