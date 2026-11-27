@@ -14,6 +14,9 @@ preparation, a star-schema model, DAX, security, and reports that answer specifi
 | 03 | [Procurement & Supply Chain OTIF](03-procurement-supply-chain-otif/) | Which suppliers put the shelves at risk? | OTIF 80.9% vs 90% target; transactional and import suppliers slip before the festive peak | [Open](https://navneet2394.github.io/bi-projects/#supply) |
 | 04 | [BI Governance Kit](04-governance-kit/) | How should a BI team build and release reports? | Standards, release flow, performance checklist, report theme | n/a |
 
+**Power BI files:** Project 01 includes the finished report as `.pbix`, `.pbit` and `.pbip`, with page screenshots
+and a PDF export ([`01-retail-ecommerce-sales/powerbi`](01-retail-ecommerce-sales/powerbi/)).
+
 ## How the projects connect
 ```
 Order lines (01) ──► Revenue, returns and COGS in the P&L (02)
@@ -31,7 +34,8 @@ also shows up in the P&L in Project 02.
 ├── sql/          SQL Server DDL, views, staging and reconciliation queries
 ├── powerquery/   Power Query (M): parameterised loads, cleaning, incremental refresh
 ├── dax/          Measure library grouped by display folder
-└── docs/         REPORT_SPEC.md (page-by-page visuals and expected values), build and security notes
+├── docs/         REPORT_SPEC.md (page-by-page visuals and expected values), build and security notes
+└── powerbi/      The Power BI report: .pbix, .pbit and .pbip (Project 01 so far)
 ```
 Every figure quoted in the READMEs is reconciled three ways: DAX, SQL, and an independent Python
 calculation (`scripts/compute_kpis.py`).
