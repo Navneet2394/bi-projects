@@ -25,18 +25,17 @@
 - Full report as PDF: [`docs/RetailSales_report.pdf`](docs/RetailSales_report.pdf)
 
 ## Business context
-*Northwind Omni Retail* (fictional) sells electronics, home, fashion, grocery and beauty products through
+Northwind Omni Retail sells electronics, home, fashion, grocery and beauty products through
 22 stores in four regions (North, West, South, East) and an online store. FY2024 was the first year with a
 formal monthly sales plan by store and category. Leadership asked for one trusted view of performance against that plan.
 
-| Stakeholder | Question they need answered | Report page |
-|---|---|---|
-| CEO / CFO | Are we on plan, and is growth profitable? | Executive Overview |
-| Head of E-commerce | Is online growth worth its discounts and returns? | Channel & Region |
-| Regional managers | How is my region doing against plan? (own region only, via RLS) | Target Tracker |
-| Category managers | Which categories and products earn the margin? | Category & Product |
-| Pricing team | Where do discounts stop paying back? | Discounts & Returns |
-| CRM team | Which customers are worth retaining? | Customers |
+## Objectives
+1. **Track sales and margin against plan:** are we on plan, and is growth profitable? *(CEO / CFO · Executive Overview)*
+2. **Test channel profitability:** is online growth worth its discounts and returns? *(Head of E-commerce · Channel & Region)*
+3. **Give each regional manager a secure view of their plan** through row-level security. *(Regional managers · Target Tracker)*
+4. **Show where margin is earned** by category, sub-category and product. *(Category managers · Category & Product)*
+5. **Find where discounts stop paying back,** and what returns cost. *(Pricing team · Discounts & Returns)*
+6. **Identify the most valuable customers** by segment and loyalty tier. *(CRM team · Customers)*
 
 ## Executive summary · 2025
 
@@ -84,7 +83,7 @@ The business beat its plan (101.7%) and grew +12.7%, but gross margin stayed fla
 | Grain | One row per order line; plan per month × store × category (2024–2025) |
 | Data quality | **207 duplicate lines** from a source batch loaded twice (2–3 Mar 2025) removed; **420 guest-checkout lines** without a customer mapped to an *Unknown* member |
 
-The dataset is synthetic, modelled on an Indian omni-channel retailer. No employer or client data is used.
+Synthetic dataset modelled on an Indian omni-channel retailer; no employer or client data.
 
 ## Data model
 ```mermaid

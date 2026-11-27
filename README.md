@@ -1,6 +1,6 @@
 # BI Projects · Navneet Shubham
 
-Three connected Power BI projects for one fictional Indian omni-channel retailer, *Northwind Omni Retail*.
+Three connected Power BI projects for one Indian omni-channel retailer, Northwind Omni Retail.
 Together they show how I take a business problem from raw data to a decision: SQL and Power Query for data
 preparation, a star-schema model, DAX, security, and reports that answer specific stakeholder questions.
 
@@ -52,7 +52,7 @@ python scripts/build_showcase_data.py  # refreshes the live dashboard data in do
 Power BI Desktop & Service · DAX · Power Query (M) · SQL Server · Python (pandas) · Git
 
 ## Data note
-All companies, people and figures are fictional (synthetic data, INR). No employer or client data is used anywhere.
+Synthetic dataset (INR); no employer or client data is used.
 
 ## Licence
 MIT. See [LICENSE](LICENSE).

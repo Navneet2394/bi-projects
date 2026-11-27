@@ -11,12 +11,11 @@
 Same company and product range as Project 01. Five distribution centres replenish the regions and the online
 store from 14 suppliers, domestic and imported. The service-level target is **90% OTIF**.
 
-| Stakeholder | Question | Report page |
-|---|---|---|
-| Head of Procurement | Which suppliers miss, and how much spend is exposed? | Supplier Scorecard |
-| Supply planners | When do deliveries slip? | Service Level |
-| DC managers | Where will stock run out? | Inventory Health |
-| Buyers | Which PO lines are late right now? | Late PO drill-through |
+## Objectives
+1. **Measure supplier service (OTIF) against the 90% target,** and show when deliveries slip. *(Supply planners · Service Level)*
+2. **Rank suppliers and quantify the spend at risk.** *(Head of Procurement · Supplier Scorecard)*
+3. **Flag stock-out risk before the festive peak.** *(DC managers · Inventory Health)*
+4. **Give buyers a list of late purchase-order lines.** *(Buyers · Late PO drill-through)*
 
 ## Executive summary · 2025
 

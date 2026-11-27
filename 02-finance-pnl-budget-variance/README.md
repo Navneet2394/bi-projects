@@ -12,11 +12,11 @@ Same company as Project 01. Finance (FP&A) closes monthly and reports Actual vs 
 cost-centre owners; a rolling forecast was added after the June 2025 close. Retail cost centres map one-to-one to
 the sales regions, so a regional sales story is visible in the P&L.
 
-| Stakeholder | Question | Report page |
-|---|---|---|
-| CFO | Are we on budget, and what will the year land at? | P&L Statement, Outlook |
-| FP&A | What explains the variance? | Variance Bridge |
-| Cost-centre owners | Is my spend within budget? | Cost Centre Accountability |
+## Objectives
+1. **Report Actual vs Budget as a full P&L** with subtotals from revenue to net income. *(CFO · P&L Statement)*
+2. **Explain the variance by driver,** from budget net income to actual. *(FP&A · Variance Bridge)*
+3. **Hold cost-centre owners to their budgets.** *(Cost-centre owners · Cost Centre Accountability)*
+4. **Forecast the year-end landing** from actuals plus the rolling forecast. *(CFO · Trend & Outlook)*
 
 ## Executive summary · Jan–Dec 2025
 

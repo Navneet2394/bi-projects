@@ -1,7 +1,7 @@
 """
 Data generator for the BI Projects repository.
 
-Creates one consistent dataset for a fictional Indian omni-channel retailer,
+Creates one consistent synthetic dataset for an Indian omni-channel retailer,
 "Northwind Omni Retail" (all amounts in INR), and writes it to the /data folder of each project:
 
   01 Retail & e-commerce sales   : orders, products, stores, customers, monthly sales plan
