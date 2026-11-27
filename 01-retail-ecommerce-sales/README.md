@@ -7,6 +7,23 @@
 > **Outcome:** a single, row-level-secured sales model that shows where profit is made and lost, by
 > channel, region, category, discount level and customer.
 
+## The Power BI report
+![Executive Overview](docs/img/01-executive-overview.png)
+
+| | | |
+|---|---|---|
+| ![Channel & Region](docs/img/02-channel-region.png) | ![Category & Product](docs/img/03-category-product.png) | ![Target Tracker](docs/img/04-target-tracker.png) |
+| Channel & Region | Category & Product | Target Tracker |
+| ![Discounts & Returns](docs/img/05-discounts-returns.png) | ![Customers](docs/img/06-customers.png) | ![Data model](docs/img/data-model.png) |
+| Discounts & Returns | Customers | Data model |
+
+**Open it yourself** (files in [`powerbi/`](powerbi/)):
+- **`RetailSales.pbix`**: download and open in Power BI Desktop; the data is already inside.
+- **`RetailSales.pbit`**: template without data; on open it asks for `pDataFolder` (the path to this project's `data\` folder, ending with `\`).
+- **`RetailSales.pbip`**: the same report as a Power BI Project (TMDL model + PBIR report), readable line by line on GitHub.
+  Clone the repo to `C:\` (or change `pDataFolder` under *Transform data › Edit parameters*) and click Refresh.
+- Full report as PDF: [`docs/RetailSales_report.pdf`](docs/RetailSales_report.pdf)
+
 ## Business context
 *Northwind Omni Retail* (fictional) sells electronics, home, fashion, grocery and beauty products through
 22 stores in four regions (North, West, South, East) and an online store. FY2024 was the first year with a
@@ -91,8 +108,9 @@ filter reaches it through `TREATAS` instead of a bi-directional relationship. `S
 - **SQL Server layer:** star-schema DDL, columnstore fact table, staging and validation queries ([`sql/`](sql/)).
 
 ## Reconciliation
-Every figure in this README is calculated three ways (DAX in the report, SQL in
-[`sql/02_validation_queries.sql`](sql/02_validation_queries.sql), and Python in [`../scripts/compute_kpis.py`](../scripts/compute_kpis.py)), and all three agree.
+Every figure in this README is calculated three ways, and all three agree: the Power BI report (DAX; see the
+page screenshots and [`docs/RetailSales_report.pdf`](docs/RetailSales_report.pdf)), SQL in
+[`sql/02_validation_queries.sql`](sql/02_validation_queries.sql), and Python in [`../scripts/compute_kpis.py`](../scripts/compute_kpis.py).
 
 | Year | Net sales | Gross margin % | Return rate | Orders | AOV | vs plan |
 |---|---:|---:|---:|---:|---:|---:|
@@ -102,9 +120,11 @@ Every figure in this README is calculated three ways (DAX in the report, SQL in
 
 ## Files
 ```
+powerbi/      RetailSales.pbix, RetailSales.pbit, RetailSales.pbip (+ .Report / .SemanticModel folders)
 data/         CSV extracts (raw FactSales includes the duplicate batch and guest orders)
 dax/          measures.dax
 powerquery/   queries.pq
 sql/          01_schema.sql, 02_validation_queries.sql
-docs/         REPORT_SPEC.md (page-by-page visuals and expected values), BUILD_GUIDE.md, RLS.md, DATA_DICTIONARY.md
+docs/         REPORT_SPEC.md (page-by-page visuals and expected values), BUILD_GUIDE.md, RLS.md, DATA_DICTIONARY.md,
+              RetailSales_report.pdf, img/ (report screenshots and data model)
 ```

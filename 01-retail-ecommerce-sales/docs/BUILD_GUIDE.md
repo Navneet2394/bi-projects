@@ -1,8 +1,8 @@
 # Build & Deployment Guide · Project 01
 
-> The model is kept as text sources (M, DAX, SQL) rather than a binary `.pbix`, so every change is reviewable in Git.
-> The report is saved as a **Power BI Project (.pbip)**, which stores the model (TMDL) and report (PBIR) as text.
-> These steps reproduce the report from scratch, e.g. for a new environment or a code review.
+> The finished report is in [`../powerbi/`](../powerbi/) as `.pbix`, `.pbit` and `.pbip`. The `.pbip` stores the model (TMDL)
+> and report (PBIR) as text, so every change is reviewable in Git. These steps reproduce the report from scratch,
+> e.g. for a new environment or a code review.
 
 ## 1. Load data (10 min)
 1. Home › Transform data › Manage Parameters › New: `pDataFolder` (Text) = full path to `data\` **ending with a backslash**.
