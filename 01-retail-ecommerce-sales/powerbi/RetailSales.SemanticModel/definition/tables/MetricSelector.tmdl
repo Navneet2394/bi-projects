@@ -1,0 +1,27 @@
+/// Disconnected table that drives the Selected Metric measure
+table MetricSelector
+	lineageTag: b6bd1989-cff5-526c-a5a4-f23ff0c88b6f
+
+	column Metric
+		dataType: string
+		lineageTag: 3bf1bf35-ccdc-5407-922f-04e8bb74c6e5
+		summarizeBy: none
+		sourceColumn: [Metric]
+		sortByColumn: Sort
+
+		annotation SummarizationSetBy = Automatic
+
+	column Sort
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 5458ce71-5c83-5f89-a014-5ecb77238ab3
+		summarizeBy: none
+		sourceColumn: [Sort]
+
+		annotation SummarizationSetBy = Automatic
+
+	partition MetricSelector = calculated
+		mode: import
+		source = DATATABLE ( "Metric", STRING, "Sort", INTEGER, { { "Net Sales", 1 }, { "Gross Margin", 2 }, { "Units", 3 }, { "Orders", 4 } } )
+

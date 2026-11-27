@@ -1,0 +1,84 @@
+{
+  "name": "Northwind Corporate",
+  "dataColors": [
+    "#1F4E79",
+    "#2E86AB",
+    "#F18F01",
+    "#6A994E",
+    "#A23B72",
+    "#5C6B73",
+    "#C98A00",
+    "#3D5A80"
+  ],
+  "background": "#FFFFFF",
+  "foreground": "#1E2A33",
+  "tableAccent": "#1F4E79",
+  "good": "#1B7F5B",
+  "neutral": "#C98A00",
+  "bad": "#C23B3B",
+  "maximum": "#1F4E79",
+  "center": "#F2F4F6",
+  "minimum": "#C23B3B",
+  "textClasses": {
+    "title": {
+      "fontFace": "Segoe UI Semibold",
+      "fontSize": 12,
+      "color": "#1E2A33"
+    },
+    "header": {
+      "fontFace": "Segoe UI Semibold",
+      "fontSize": 11,
+      "color": "#1E2A33"
+    },
+    "label": {
+      "fontFace": "Segoe UI",
+      "fontSize": 9,
+      "color": "#5C6B73"
+    },
+    "callout": {
+      "fontFace": "Segoe UI Semibold",
+      "fontSize": 24,
+      "color": "#1E2A33"
+    }
+  },
+  "visualStyles": {
+    "*": {
+      "*": {
+        "border": [
+          {
+            "show": false
+          }
+        ],
+        "dropShadow": [
+          {
+            "show": false
+          }
+        ],
+        "title": [
+          {
+            "fontSize": 12,
+            "fontColor": {
+              "solid": {
+                "color": "#1E2A33"
+              }
+            }
+          }
+        ]
+      }
+    },
+    "page": {
+      "*": {
+        "background": [
+          {
+            "color": {
+              "solid": {
+                "color": "#F7F8FA"
+              }
+            },
+            "transparency": 0
+          }
+        ]
+      }
+    }
+  }
+}

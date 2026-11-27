@@ -1,0 +1,8 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/page/1.4.0/schema.json",
+  "name": "5c8026bd3dbf5b808668",
+  "displayName": "Discounts & Returns",
+  "displayOption": "FitToPage",
+  "height": 720,
+  "width": 1280
+}

@@ -1,0 +1,8 @@
+/// Dynamic RLS: users see only the region(s) mapped to them in SecurityUserRegion; ALL = unrestricted
+role 'Regional Manager'
+	modelPermission: read
+
+	tablePermission DimStore = VAR UserRegions = CALCULATETABLE ( VALUES ( SecurityUserRegion[Region] ), SecurityUserRegion[UserPrincipalName] = LOWER ( USERPRINCIPALNAME () ) ) RETURN "ALL" IN UserRegions || DimStore[Region] IN UserRegions
+
+	annotation PBI_Id = 663eae1c86255779ba3d736c8314e064
+

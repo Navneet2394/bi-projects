@@ -1,0 +1,8 @@
+/// Full path to this project's data folder, ending with a backslash
+expression pDataFolder = "C:\bi-projects\01-retail-ecommerce-sales\data\" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true]
+	lineageTag: 1a10982c-bde2-5f5f-b700-89cb86b0b673
+
+	annotation PBI_ResultType = Text
+
+	annotation PBI_NavigationStepName = Navigation
+

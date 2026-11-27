@@ -1,0 +1,77 @@
+table DimCustomer
+	lineageTag: e0402801-ab8f-53d0-bb33-e4016cfd9069
+
+	column CustomerKey
+		dataType: int64
+		isHidden
+		lineageTag: 7de03dbf-817a-5b42-910a-60b6e3a70aa2
+		summarizeBy: none
+		sourceColumn: CustomerKey
+
+		annotation SummarizationSetBy = Automatic
+
+	column CustomerCode
+		dataType: string
+		lineageTag: ece7f449-a636-5c5d-b871-170add2bd3ef
+		summarizeBy: none
+		sourceColumn: CustomerCode
+
+		annotation SummarizationSetBy = Automatic
+
+	column Segment
+		dataType: string
+		lineageTag: f379ae84-188d-5697-9f9f-6e5d9d51b5f2
+		summarizeBy: none
+		sourceColumn: Segment
+
+		annotation SummarizationSetBy = Automatic
+
+	column LoyaltyTier
+		dataType: string
+		lineageTag: 159f64f8-effe-5e96-a7e7-67d6994826de
+		summarizeBy: none
+		sourceColumn: LoyaltyTier
+
+		annotation SummarizationSetBy = Automatic
+
+	column HomeRegion
+		dataType: string
+		lineageTag: ef13f12b-dfbb-5bec-b8a4-87e7562dfa92
+		summarizeBy: none
+		sourceColumn: HomeRegion
+
+		annotation SummarizationSetBy = Automatic
+
+	column SignupDate
+		dataType: dateTime
+		formatString: Short Date
+		lineageTag: 066e9adf-28a3-5c13-983d-a4cab616a994
+		summarizeBy: none
+		sourceColumn: SignupDate
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	partition DimCustomer = m
+		mode: import
+		source =
+				let
+				    Source = Csv.Document(File.Contents(pDataFolder & "DimCustomer.csv"), [Delimiter = ",", Encoding = 65001, QuoteStyle = QuoteStyle.Csv]),
+				    Promoted = Table.PromoteHeaders(Source, [PromoteAllScalars = true]),
+				    Blanks = Table.ReplaceValue(Promoted, "", null, Replacer.ReplaceValue, Table.ColumnNames(Promoted)),
+				    Typed = Table.TransformColumnTypes(Blanks, {
+				        {"CustomerKey", Int64.Type},
+				        {"CustomerCode", type text},
+				        {"Segment", type text},
+				        {"LoyaltyTier", type text},
+				        {"HomeRegion", type text},
+				        {"SignupDate", type date}
+				    }, "en-US")
+				in
+				    Typed
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

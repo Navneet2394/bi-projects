@@ -1,0 +1,21 @@
+/// What-if parameter for the Top N Products Sales measure
+table TopN
+	lineageTag: 33379135-e58d-559f-9206-0ffc11b4504c
+
+	measure 'TopN Value Selected' = SELECTEDVALUE ( 'TopN'[TopN Value], 10 )
+		formatString: 0
+		lineageTag: 8305643d-f199-5cbe-82dc-c433264b8275
+
+	column 'TopN Value'
+		dataType: int64
+		formatString: 0
+		lineageTag: 0213a6a9-5d0b-59bc-bb5f-5dc27848bb39
+		summarizeBy: none
+		sourceColumn: [TopN Value]
+
+		annotation SummarizationSetBy = Automatic
+
+	partition TopN = calculated
+		mode: import
+		source = SELECTCOLUMNS ( GENERATESERIES ( 5, 25, 5 ), "TopN Value", [Value] )
+

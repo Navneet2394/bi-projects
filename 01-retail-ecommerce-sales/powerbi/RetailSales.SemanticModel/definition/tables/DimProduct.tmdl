@@ -1,0 +1,103 @@
+table DimProduct
+	lineageTag: e9f994ba-9d48-5281-9cf7-b4b1228bc80e
+
+	column ProductKey
+		dataType: int64
+		isHidden
+		lineageTag: 896dd263-2294-58aa-895b-b39ee49f1788
+		summarizeBy: none
+		sourceColumn: ProductKey
+
+		annotation SummarizationSetBy = Automatic
+
+	column SKU
+		dataType: string
+		lineageTag: 30a3f67b-ba1e-542f-a82e-bd0a00b58822
+		summarizeBy: none
+		sourceColumn: SKU
+
+		annotation SummarizationSetBy = Automatic
+
+	column ProductName
+		dataType: string
+		lineageTag: 4b81d5ae-446c-5a85-aa15-d44a544db578
+		summarizeBy: none
+		sourceColumn: ProductName
+
+		annotation SummarizationSetBy = Automatic
+
+	column SubCategory
+		dataType: string
+		lineageTag: 8d065c11-b4f6-5333-8ca2-c76224a7283c
+		summarizeBy: none
+		sourceColumn: SubCategory
+
+		annotation SummarizationSetBy = Automatic
+
+	column Category
+		dataType: string
+		lineageTag: 0b079fb6-0314-5cc6-b2ca-07841d679933
+		summarizeBy: none
+		sourceColumn: Category
+
+		annotation SummarizationSetBy = Automatic
+
+	column Brand
+		dataType: string
+		lineageTag: 6f95a253-1258-5bdf-b586-4d2052520bee
+		summarizeBy: none
+		sourceColumn: Brand
+
+		annotation SummarizationSetBy = Automatic
+
+	column ListPrice
+		dataType: decimal
+		formatString: "₹"#,0
+		lineageTag: 7d4b9cad-f455-57c9-a80d-c82991a5349f
+		summarizeBy: none
+		sourceColumn: ListPrice
+
+		annotation SummarizationSetBy = Automatic
+
+	column UnitCost
+		dataType: decimal
+		formatString: "₹"#,0.00
+		lineageTag: 48f70b53-8869-5199-b148-8a1160c6144d
+		summarizeBy: none
+		sourceColumn: UnitCost
+
+		annotation SummarizationSetBy = Automatic
+
+	column ABCClass
+		dataType: string
+		lineageTag: e1bdacfb-ec45-59ac-8e59-95411a238f71
+		summarizeBy: none
+		sourceColumn: ABCClass
+
+		annotation SummarizationSetBy = Automatic
+
+	partition DimProduct = m
+		mode: import
+		source =
+				let
+				    Source = Csv.Document(File.Contents(pDataFolder & "DimProduct.csv"), [Delimiter = ",", Encoding = 65001, QuoteStyle = QuoteStyle.Csv]),
+				    Promoted = Table.PromoteHeaders(Source, [PromoteAllScalars = true]),
+				    Blanks = Table.ReplaceValue(Promoted, "", null, Replacer.ReplaceValue, Table.ColumnNames(Promoted)),
+				    Typed = Table.TransformColumnTypes(Blanks, {
+				        {"ProductKey", Int64.Type},
+				        {"SKU", type text},
+				        {"ProductName", type text},
+				        {"SubCategory", type text},
+				        {"Category", type text},
+				        {"Brand", type text},
+				        {"ListPrice", Currency.Type},
+				        {"UnitCost", Currency.Type},
+				        {"ABCClass", type text}
+				    }, "en-US")
+				in
+				    Typed
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

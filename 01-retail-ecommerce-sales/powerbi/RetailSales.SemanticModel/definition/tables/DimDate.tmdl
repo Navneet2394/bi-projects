@@ -1,0 +1,141 @@
+/// Calendar 2023-2025, Indian fiscal year (April-March); IsFestiveSeason = October-November
+table DimDate
+	lineageTag: 4af56971-22bb-56e1-87d5-3c71dd6c27f5
+	dataCategory: Time
+
+	column Date
+		dataType: dateTime
+		isKey
+		formatString: Short Date
+		lineageTag: 2bf11a32-95de-5313-8e6c-77525332a7c6
+		summarizeBy: none
+		sourceColumn: Date
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column DateKey
+		dataType: int64
+		isHidden
+		lineageTag: 9539575b-5989-5514-8f40-aa553e51d2b0
+		summarizeBy: none
+		sourceColumn: DateKey
+
+		annotation SummarizationSetBy = Automatic
+
+	column Year
+		dataType: int64
+		formatString: 0
+		lineageTag: 9cfd4dcc-2dfc-585d-b5ac-6ede2c896178
+		summarizeBy: none
+		sourceColumn: Year
+
+		annotation SummarizationSetBy = Automatic
+
+	column Quarter
+		dataType: string
+		lineageTag: e9f26625-b973-56d3-a543-ac5f4ac9cd8a
+		summarizeBy: none
+		sourceColumn: Quarter
+
+		annotation SummarizationSetBy = Automatic
+
+	column MonthNo
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: f7ab7342-92b4-57c2-8c36-84e266e3edd9
+		summarizeBy: none
+		sourceColumn: MonthNo
+
+		annotation SummarizationSetBy = Automatic
+
+	column Month
+		dataType: string
+		lineageTag: 57fb0fb4-4df9-5b83-94ee-5462f74a9689
+		summarizeBy: none
+		sourceColumn: Month
+		sortByColumn: MonthNo
+
+		annotation SummarizationSetBy = Automatic
+
+	column YearMonth
+		dataType: string
+		lineageTag: b69fd62a-6e75-57b2-acd2-6f2c1c5e6dfd
+		summarizeBy: none
+		sourceColumn: YearMonth
+
+		annotation SummarizationSetBy = Automatic
+
+	column WeekdayNo
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: c973d43c-d5d5-59bc-bc53-64e4fe3786b1
+		summarizeBy: none
+		sourceColumn: WeekdayNo
+
+		annotation SummarizationSetBy = Automatic
+
+	column Weekday
+		dataType: string
+		lineageTag: e90f6687-6659-5e00-afb4-ac780df42c62
+		summarizeBy: none
+		sourceColumn: Weekday
+		sortByColumn: WeekdayNo
+
+		annotation SummarizationSetBy = Automatic
+
+	column IsWeekend
+		dataType: boolean
+		lineageTag: b2be7de3-227f-5363-a1b0-3d73b06d2caf
+		summarizeBy: none
+		sourceColumn: IsWeekend
+
+		annotation SummarizationSetBy = Automatic
+
+	column FiscalYear
+		dataType: string
+		lineageTag: 63a8f427-0ffe-5ebf-aadb-5ce7a8f238ae
+		summarizeBy: none
+		sourceColumn: FiscalYear
+
+		annotation SummarizationSetBy = Automatic
+
+	column IsFestiveSeason
+		dataType: boolean
+		lineageTag: d9776050-ed70-53e1-840e-b701b0e60de3
+		summarizeBy: none
+		sourceColumn: IsFestiveSeason
+
+		annotation SummarizationSetBy = Automatic
+
+	partition DimDate = m
+		mode: import
+		source =
+				let
+				    Source = Csv.Document(File.Contents(pDataFolder & "DimDate.csv"), [Delimiter = ",", Encoding = 65001, QuoteStyle = QuoteStyle.Csv]),
+				    Promoted = Table.PromoteHeaders(Source, [PromoteAllScalars = true]),
+				    Blanks = Table.ReplaceValue(Promoted, "", null, Replacer.ReplaceValue, Table.ColumnNames(Promoted)),
+				    Typed = Table.TransformColumnTypes(Blanks, {
+				        {"Date", type date},
+				        {"DateKey", Int64.Type},
+				        {"Year", Int64.Type},
+				        {"Quarter", type text},
+				        {"MonthNo", Int64.Type},
+				        {"Month", type text},
+				        {"YearMonth", type text},
+				        {"WeekdayNo", Int64.Type},
+				        {"Weekday", type text},
+				        {"IsWeekend", type logical},
+				        {"FiscalYear", type text},
+				        {"IsFestiveSeason", type logical}
+				    }, "en-US")
+				in
+				    Typed
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

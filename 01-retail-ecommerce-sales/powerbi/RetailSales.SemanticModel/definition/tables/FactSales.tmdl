@@ -1,0 +1,421 @@
+/// Order lines. Power Query removes the double-loaded batch (DQ-1) and maps guest checkouts to CustomerKey -1 (DQ-2)
+table FactSales
+	lineageTag: d381873b-800f-5161-ac52-41f027444f82
+
+	measure 'Gross Sales' = SUM ( FactSales[SalesAmount] )
+		formatString: "₹"#,0
+		displayFolder: 1 Base
+		lineageTag: c548c35c-e0cf-5bf1-99d6-77537414476c
+
+	measure 'Returned Sales' = CALCULATE ( [Gross Sales], FactSales[IsReturned] = TRUE () )
+		formatString: "₹"#,0
+		displayFolder: 1 Base
+		lineageTag: 41c64581-8e25-528c-bf97-a2dcb94403ee
+
+	measure 'Net Sales' = [Gross Sales] - [Returned Sales]
+		formatString: "₹"#,0
+		displayFolder: 1 Base
+		lineageTag: fda67512-5565-5013-96e5-7e47e20d9d72
+
+	measure 'Net Cost' = CALCULATE ( SUM ( FactSales[CostAmount] ), FactSales[IsReturned] = FALSE () )
+		formatString: "₹"#,0
+		displayFolder: 1 Base
+		lineageTag: b0b9337d-8c4c-5fbd-a0e1-7750746529e4
+
+	measure 'Gross Margin' = [Net Sales] - [Net Cost]
+		formatString: "₹"#,0
+		displayFolder: 1 Base
+		lineageTag: f03b0107-a1d5-5e27-8355-27c7bd60d3fc
+
+	measure 'Gross Margin %' = DIVIDE ( [Gross Margin], [Net Sales] )
+		formatString: 0.0%
+		displayFolder: 1 Base
+		lineageTag: 6544be03-ebcc-5969-b808-6160180bd6e2
+
+	measure 'Units Sold' = CALCULATE ( SUM ( FactSales[Quantity] ), FactSales[IsReturned] = FALSE () )
+		formatString: #,0
+		displayFolder: 1 Base
+		lineageTag: c69af0e7-88e1-58d3-a2c2-4b27636aa206
+
+	measure Orders = DISTINCTCOUNT ( FactSales[OrderNumber] )
+		formatString: #,0
+		displayFolder: 1 Base
+		lineageTag: 92a578f9-36aa-5350-9c66-d6bfa790a599
+
+	measure 'Average Order Value' = DIVIDE ( [Net Sales], [Orders] )
+		formatString: "₹"#,0
+		displayFolder: 1 Base
+		lineageTag: d8a336ab-7474-57b3-b11f-11ef54975e91
+
+	measure 'Return Rate %' = DIVIDE ( [Returned Sales], [Gross Sales] )
+		formatString: 0.0%
+		displayFolder: 1 Base
+		lineageTag: 5a1a4355-d651-51a7-946b-047e68153c7e
+
+	measure 'Discount Given' = SUMX ( FactSales, FactSales[Quantity] * FactSales[UnitPrice] * FactSales[DiscountPct] )
+		formatString: "₹"#,0
+		displayFolder: 1 Base
+		lineageTag: 0858c2fa-3f50-5f65-b3ce-d1cb0600d6d6
+
+	measure 'Effective Discount %' = DIVIDE ( [Discount Given], [Gross Sales] + [Discount Given] )
+		formatString: 0.0%
+		displayFolder: 1 Base
+		lineageTag: 46635fce-5e94-5e0a-a768-147a81ce52e8
+
+	/// Requires DimDate marked as Date Table and FactSales[OrderDateKey] -> DimDate[DateKey]
+	measure 'Net Sales YTD' = TOTALYTD ( [Net Sales], DimDate[Date] )
+		formatString: "₹"#,0
+		displayFolder: 2 Time Intelligence
+		lineageTag: c01a7cca-ce86-5b84-94e3-2705c00ddf36
+
+	/// Fiscal year ends 31 March
+	measure 'Net Sales FYTD' = TOTALYTD ( [Net Sales], DimDate[Date], "3/31" )
+		formatString: "₹"#,0
+		displayFolder: 2 Time Intelligence
+		lineageTag: 85c7e991-1296-5fb6-a404-a8363a84324a
+
+	measure 'Net Sales PY' = CALCULATE ( [Net Sales], SAMEPERIODLASTYEAR ( DimDate[Date] ) )
+		formatString: "₹"#,0
+		displayFolder: 2 Time Intelligence
+		lineageTag: ccf10d23-87c4-54b3-be4a-049bfee52f07
+
+	measure 'Net Sales YoY' = [Net Sales] - [Net Sales PY]
+		formatString: "₹"#,0
+		displayFolder: 2 Time Intelligence
+		lineageTag: 581f313d-4658-5dcf-9c22-c13f365a947c
+
+	measure 'Net Sales YoY %' = DIVIDE ( [Net Sales YoY], [Net Sales PY] )
+		formatString: 0.0%
+		displayFolder: 2 Time Intelligence
+		lineageTag: 0ca131c9-544e-51d8-8e2a-7c5b5deccb4b
+
+	measure 'Net Sales MTD' = TOTALMTD ( [Net Sales], DimDate[Date] )
+		formatString: "₹"#,0
+		displayFolder: 2 Time Intelligence
+		lineageTag: d4ff9f6f-c1d0-53ee-aaaa-218b02595eac
+
+	measure 'Net Sales Rolling 3M' =
+			CALCULATE (
+			    [Net Sales],
+			    DATESINPERIOD ( DimDate[Date], MAX ( DimDate[Date] ), -3, MONTH )
+			)
+		formatString: "₹"#,0
+		displayFolder: 2 Time Intelligence
+		lineageTag: 5005aef8-2050-557e-898f-ce4d0c22dd3e
+
+	measure 'Net Sales Rolling 12M' =
+			CALCULATE (
+			    [Net Sales],
+			    DATESINPERIOD ( DimDate[Date], MAX ( DimDate[Date] ), -12, MONTH )
+			)
+		formatString: "₹"#,0
+		displayFolder: 2 Time Intelligence
+		lineageTag: 20f5c110-7723-5eba-bee8-9176eb6a28b7
+
+	/// Stops lines from running to zero after the last date that has data
+	measure 'Net Sales (to last data date)' =
+			VAR LastDataDate =
+			    CALCULATE ( MAX ( FactSales[OrderDateKey] ), REMOVEFILTERS () )
+			RETURN
+			    IF ( MIN ( DimDate[DateKey] ) <= LastDataDate, [Net Sales] )
+		formatString: "₹"#,0
+		displayFolder: 2 Time Intelligence
+		lineageTag: d51d5b95-3479-5d82-883a-2173f241a94a
+
+	/// FactSalesTarget is at Month x Store x Category grain. Relationships: FactSalesTarget[StoreKey] -> DimStore; MonthStartDate -> DimDate[Date]. Category has no product-level key, so the filter is passed with TREATAS.
+	measure Target =
+			CALCULATE (
+			    SUM ( FactSalesTarget[TargetAmount] ),
+			    TREATAS ( VALUES ( DimProduct[Category] ), FactSalesTarget[Category] )
+			)
+		formatString: "₹"#,0
+		displayFolder: 3 Target
+		lineageTag: 0763203b-ade1-5e24-ac72-432d607a277e
+
+	measure 'Target Attainment %' = DIVIDE ( [Net Sales], [Target] )
+		formatString: 0.0%
+		displayFolder: 3 Target
+		lineageTag: f345fa50-7d00-573b-bec3-a6b7c294c5b3
+
+	measure 'Target Gap' = [Net Sales] - [Target]
+		formatString: "₹"#,0
+		displayFolder: 3 Target
+		lineageTag: ef2e2324-b992-5ad9-b4a6-dcf485f9441e
+
+	/// Used in conditional formatting > Field value
+	measure 'Target Status Colour' =
+			SWITCH (
+			    TRUE (),
+			    ISBLANK ( [Target] ), "#9AA0A6",
+			    [Target Attainment %] >= 1, "#1B7F5B",
+			    [Target Attainment %] >= 0.95, "#C98A00",
+			    "#C23B3B"
+			)
+		displayFolder: 3 Target
+		lineageTag: d3ba7684-03ed-5a1c-8e23-46bf79d3b25b
+
+	/// Excludes the Unknown member (guest checkouts, CustomerKey = -1)
+	measure 'Active Customers' = CALCULATE ( DISTINCTCOUNT ( FactSales[CustomerKey] ), FactSales[CustomerKey] <> -1 )
+		formatString: #,0
+		displayFolder: 4 Customer
+		lineageTag: 01413112-5a68-55c1-a836-300e7c1e480f
+
+	/// Customers whose first-ever purchase falls in the current filter period
+	measure 'New Customers' =
+			VAR CurrentCustomers = VALUES ( FactSales[CustomerKey] )
+			VAR PeriodStart = MIN ( DimDate[Date] )
+			RETURN
+			    COUNTROWS (
+			        FILTER (
+			            CurrentCustomers,
+			            CALCULATE (
+			                MIN ( FactSales[OrderDateKey] ),
+			                REMOVEFILTERS ( DimDate )
+			            ) >= VALUE ( FORMAT ( PeriodStart, "YYYYMMDD" ) )
+			        )
+			    )
+		formatString: #,0
+		displayFolder: 4 Customer
+		lineageTag: 96ca7086-5b28-5ab9-9e1d-818fbc6ea8d7
+
+	measure 'Returning Customers' = [Active Customers] - [New Customers]
+		formatString: #,0
+		displayFolder: 4 Customer
+		lineageTag: bcf43ae1-f5b9-57bb-9600-063a0cbb368e
+
+	measure 'Orders per Customer' = DIVIDE ( CALCULATE ( [Orders], FactSales[CustomerKey] <> -1 ), [Active Customers] )
+		formatString: 0.0
+		displayFolder: 4 Customer
+		lineageTag: 10facbd8-ad7c-5d04-a886-ebc1ade87550
+
+	measure 'Sales per Customer' = DIVIDE ( [Net Sales], [Active Customers] )
+		formatString: "₹"#,0
+		displayFolder: 4 Customer
+		lineageTag: cd92c1be-bdc1-593d-9730-76777bb42b7a
+
+	measure 'Product Rank (Net Sales)' =
+			IF (
+			    ISINSCOPE ( DimProduct[ProductName] ),
+			    RANKX ( ALLSELECTED ( DimProduct[ProductName] ), [Net Sales], , DESC, DENSE )
+			)
+		formatString: #,0
+		displayFolder: 5 Ranking & Pareto
+		lineageTag: c45ca4ec-390a-55f7-a40b-8abdcd034de3
+
+	measure 'Cumulative Sales % (Pareto)' =
+			VAR CurrentSales = [Net Sales]
+			VAR AllProducts =
+			    ADDCOLUMNS ( ALLSELECTED ( DimProduct[ProductName] ), "@s", [Net Sales] )
+			VAR Cum =
+			    SUMX ( FILTER ( AllProducts, [@s] >= CurrentSales ), [@s] )
+			RETURN
+			    DIVIDE ( Cum, SUMX ( AllProducts, [@s] ) )
+		formatString: 0.0%
+		displayFolder: 5 Ranking & Pareto
+		lineageTag: 5cd7e90d-4032-5546-9b98-1c96f0e39f83
+
+	measure 'ABC Class' =
+			VAR p = [Cumulative Sales % (Pareto)]
+			RETURN
+			    SWITCH ( TRUE (), ISBLANK ( p ), BLANK (), p <= 0.8, "A", p <= 0.95, "B", "C" )
+		displayFolder: 5 Ranking & Pareto
+		lineageTag: 52e2dc6a-ea68-5ae8-8fd8-f0c1c4ba4644
+
+	/// Pair with a "Top N" what-if parameter table: TopN[TopN Value]
+	measure 'Top N Products Sales' =
+			VAR N = SELECTEDVALUE ( 'TopN'[TopN Value], 10 )
+			VAR TopProducts =
+			    TOPN ( N, ALLSELECTED ( DimProduct[ProductName] ), [Net Sales], DESC )
+			RETURN
+			    CALCULATE ( [Net Sales], KEEPFILTERS ( TopProducts ) )
+		formatString: "₹"#,0
+		displayFolder: 5 Ranking & Pareto
+		lineageTag: b7467bd8-9c8c-5fe9-8f96-f0b8daf01a93
+
+	measure 'Selected Period Label' =
+			VAR mn = MIN ( DimDate[Date] )
+			VAR mx = MAX ( DimDate[Date] )
+			RETURN
+			    FORMAT ( mn, "dd MMM yyyy" ) & " – " & FORMAT ( mx, "dd MMM yyyy" )
+		displayFolder: 6 Dynamic / UX
+		lineageTag: a32377d4-b142-50fc-a7db-1d19f1555230
+
+	measure 'KPI Card Subtitle' =
+			VAR y = [Net Sales YoY %]
+			RETURN
+			    IF (
+			        ISBLANK ( y ), "No prior-year data",
+			        IF ( y >= 0, "▲ ", "▼ " ) & FORMAT ( ABS ( y ), "0.0%" ) & " vs PY"
+			    )
+		displayFolder: 6 Dynamic / UX
+		lineageTag: abeb4066-56a2-5ab1-9512-9f9b78184558
+
+	/// Field-parameter-style measure switch (works without field parameters too) Create a disconnected table: MetricSelector = DATATABLE("Metric",STRING,"Sort",INTEGER,{{"Net Sales",1},{"Gross Margin",2},{"Units",3},{"Orders",4}})
+	measure 'Selected Metric' =
+			SWITCH (
+			    SELECTEDVALUE ( MetricSelector[Metric], "Net Sales" ),
+			    "Net Sales", [Net Sales],
+			    "Gross Margin", [Gross Margin],
+			    "Units", [Units Sold],
+			    "Orders", [Orders]
+			)
+		formatString: #,0
+		displayFolder: 6 Dynamic / UX
+		lineageTag: 4ecb2e2b-155c-5523-b011-525ca1277eba
+
+	/// Used only for testing/display; the actual RLS filter is in docs/RLS.md
+	measure 'Current User' = USERPRINCIPALNAME ()
+		displayFolder: 7 RLS helper
+		lineageTag: 7c98b60e-15a1-52aa-b69a-996aa5c4b2fa
+
+	column OrderNumber
+		dataType: string
+		lineageTag: 4a6dfe90-fb67-5542-ade8-d09a1c0050f3
+		summarizeBy: none
+		sourceColumn: OrderNumber
+
+		annotation SummarizationSetBy = Automatic
+
+	column LineNumber
+		dataType: int64
+		isHidden
+		lineageTag: d22a54f0-08f3-5722-9d4f-5a7f8f2d7f9b
+		summarizeBy: none
+		sourceColumn: LineNumber
+
+		annotation SummarizationSetBy = Automatic
+
+	column OrderDateKey
+		dataType: int64
+		isHidden
+		lineageTag: 27101c15-4e6e-5eb3-8231-0b377b3a2426
+		summarizeBy: none
+		sourceColumn: OrderDateKey
+
+		annotation SummarizationSetBy = Automatic
+
+	column ProductKey
+		dataType: int64
+		isHidden
+		lineageTag: daa3d4f0-14fd-5692-a7b0-b62d940f44e5
+		summarizeBy: none
+		sourceColumn: ProductKey
+
+		annotation SummarizationSetBy = Automatic
+
+	column StoreKey
+		dataType: int64
+		isHidden
+		lineageTag: d1652c60-3437-5618-b3ff-2ce41fbf48c8
+		summarizeBy: none
+		sourceColumn: StoreKey
+
+		annotation SummarizationSetBy = Automatic
+
+	column CustomerKey
+		dataType: double
+		isHidden
+		lineageTag: 1f3e0cb1-f168-597e-96a6-2e671e6b24c0
+		summarizeBy: none
+		sourceColumn: CustomerKey
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Channel
+		dataType: string
+		lineageTag: cf0db275-ee10-5d19-a68c-ee2f57516264
+		summarizeBy: none
+		sourceColumn: Channel
+
+		annotation SummarizationSetBy = Automatic
+
+	column Quantity
+		dataType: int64
+		isHidden
+		lineageTag: 8a5993b1-5189-5073-976b-bcb3cc8a1f69
+		summarizeBy: none
+		sourceColumn: Quantity
+
+		annotation SummarizationSetBy = Automatic
+
+	column UnitPrice
+		dataType: decimal
+		isHidden
+		lineageTag: 02db7d8f-de65-57e4-881e-4e780d1acba3
+		summarizeBy: none
+		sourceColumn: UnitPrice
+
+		annotation SummarizationSetBy = Automatic
+
+	column DiscountPct
+		dataType: double
+		formatString: 0%
+		lineageTag: a61b8f74-124b-502b-b03d-f2673abb83ef
+		summarizeBy: none
+		sourceColumn: DiscountPct
+
+		annotation SummarizationSetBy = Automatic
+
+	column SalesAmount
+		dataType: decimal
+		isHidden
+		lineageTag: 654d4bdb-cf78-5be4-a515-f99cce879a9b
+		summarizeBy: none
+		sourceColumn: SalesAmount
+
+		annotation SummarizationSetBy = Automatic
+
+	column CostAmount
+		dataType: decimal
+		isHidden
+		lineageTag: 4268f4a6-c81d-5335-a72d-4d4ab3693b11
+		summarizeBy: none
+		sourceColumn: CostAmount
+
+		annotation SummarizationSetBy = Automatic
+
+	column IsReturned
+		dataType: boolean
+		lineageTag: e280e114-c038-531e-be20-e5b4a0c3a4ec
+		summarizeBy: none
+		sourceColumn: IsReturned
+
+		annotation SummarizationSetBy = Automatic
+
+	partition FactSales = m
+		mode: import
+		source =
+				let
+				    Source = Csv.Document(File.Contents(pDataFolder & "FactSales.csv"), [Delimiter = ",", Encoding = 65001, QuoteStyle = QuoteStyle.Csv]),
+				    Promoted = Table.PromoteHeaders(Source, [PromoteAllScalars = true]),
+				    Blanks = Table.ReplaceValue(Promoted, "", null, Replacer.ReplaceValue, Table.ColumnNames(Promoted)),
+				    Typed = Table.TransformColumnTypes(Blanks, {
+				        {"SalesOrderLineKey", Int64.Type},
+				        {"OrderNumber", type text},
+				        {"LineNumber", Int64.Type},
+				        {"OrderDateKey", Int64.Type},
+				        {"ProductKey", Int64.Type},
+				        {"StoreKey", Int64.Type},
+				        {"CustomerKey", Int64.Type},
+				        {"Channel", type text},
+				        {"Quantity", Int64.Type},
+				        {"UnitPrice", Currency.Type},
+				        {"DiscountPct", type number},
+				        {"SalesAmount", Currency.Type},
+				        {"CostAmount", Currency.Type},
+				        {"IsReturned", type logical}
+				    }, "en-US"),
+				    // DQ-1: a source batch (2-3 Mar 2025) was loaded twice -> keep one row per line key
+				    Deduped = Table.Distinct(Typed, {"SalesOrderLineKey"}),
+				    // DQ-2: online guest checkouts have no customer -> Unknown member (-1)
+				    CustomerFixed = Table.ReplaceValue(Deduped, null, -1, Replacer.ReplaceValue, {"CustomerKey"}),
+				    Slim = Table.RemoveColumns(CustomerFixed, {"SalesOrderLineKey"})
+				in
+				    Slim
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

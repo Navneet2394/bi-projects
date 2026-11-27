@@ -1,0 +1,44 @@
+/// Maps each user to the region(s) they may see; used by the Regional Manager RLS role
+table SecurityUserRegion
+	lineageTag: 4cf262e0-8ff8-5521-a3b2-3daadd9f3921
+
+	column UserPrincipalName
+		dataType: string
+		lineageTag: caf4dbfe-064f-5fa8-a8df-12cb11944f76
+		summarizeBy: none
+		sourceColumn: UserPrincipalName
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column Region
+		dataType: string
+		lineageTag: fc0209af-6039-5d46-8ba3-0670e40b84e7
+		summarizeBy: none
+		sourceColumn: Region
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	partition SecurityUserRegion = m
+		mode: import
+		source =
+				let
+				    Source = Csv.Document(File.Contents(pDataFolder & "SecurityUserRegion.csv"), [Delimiter = ",", Encoding = 65001, QuoteStyle = QuoteStyle.Csv]),
+				    Promoted = Table.PromoteHeaders(Source, [PromoteAllScalars = true]),
+				    Blanks = Table.ReplaceValue(Promoted, "", null, Replacer.ReplaceValue, Table.ColumnNames(Promoted)),
+				    Typed = Table.TransformColumnTypes(Blanks, {
+				        {"UserPrincipalName", type text},
+				        {"Region", type text}
+				    }, "en-US")
+				in
+				    Typed
+
+	changedProperty = IsHidden
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

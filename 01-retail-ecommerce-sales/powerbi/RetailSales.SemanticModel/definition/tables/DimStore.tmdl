@@ -1,0 +1,97 @@
+table DimStore
+	lineageTag: e019f484-8c01-5f30-8779-795beeda3f6f
+
+	column StoreKey
+		dataType: int64
+		isHidden
+		lineageTag: 5ec82f68-2143-5633-bc3a-efd310ac0a77
+		summarizeBy: none
+		sourceColumn: StoreKey
+
+		annotation SummarizationSetBy = Automatic
+
+	column StoreCode
+		dataType: string
+		lineageTag: 34eb21f1-c156-57eb-b3a5-f37a79073fbf
+		summarizeBy: none
+		sourceColumn: StoreCode
+
+		annotation SummarizationSetBy = Automatic
+
+	column StoreName
+		dataType: string
+		lineageTag: 160143f3-eea8-549b-a6a7-6ed7a1a3992a
+		summarizeBy: none
+		sourceColumn: StoreName
+
+		annotation SummarizationSetBy = Automatic
+
+	column City
+		dataType: string
+		lineageTag: e2d38358-3dc9-58a8-a949-59a85272a953
+		dataCategory: City
+		summarizeBy: none
+		sourceColumn: City
+
+		annotation SummarizationSetBy = Automatic
+
+	column Region
+		dataType: string
+		lineageTag: 1d8776ae-2a19-5043-add4-34fbdb28f2e4
+		summarizeBy: none
+		sourceColumn: Region
+
+		annotation SummarizationSetBy = Automatic
+
+	column Format
+		dataType: string
+		lineageTag: 8cabb32f-3735-582a-b946-5f3621236cd6
+		summarizeBy: none
+		sourceColumn: Format
+
+		annotation SummarizationSetBy = Automatic
+
+	column OpenDate
+		dataType: dateTime
+		formatString: Short Date
+		lineageTag: a6a0b6e5-9f80-5870-a2a4-f63f223a2e70
+		summarizeBy: none
+		sourceColumn: OpenDate
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column RegionalManagerEmail
+		dataType: string
+		isHidden
+		lineageTag: 16c9896b-1f0a-5628-8baa-8150de9db45c
+		summarizeBy: none
+		sourceColumn: RegionalManagerEmail
+
+		annotation SummarizationSetBy = Automatic
+
+	partition DimStore = m
+		mode: import
+		source =
+				let
+				    Source = Csv.Document(File.Contents(pDataFolder & "DimStore.csv"), [Delimiter = ",", Encoding = 65001, QuoteStyle = QuoteStyle.Csv]),
+				    Promoted = Table.PromoteHeaders(Source, [PromoteAllScalars = true]),
+				    Blanks = Table.ReplaceValue(Promoted, "", null, Replacer.ReplaceValue, Table.ColumnNames(Promoted)),
+				    Typed = Table.TransformColumnTypes(Blanks, {
+				        {"StoreKey", Int64.Type},
+				        {"StoreCode", type text},
+				        {"StoreName", type text},
+				        {"City", type text},
+				        {"Region", type text},
+				        {"Format", type text},
+				        {"OpenDate", type date},
+				        {"RegionalManagerEmail", type text}
+				    }, "en-US")
+				in
+				    Typed
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

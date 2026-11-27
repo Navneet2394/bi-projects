@@ -1,6 +1,4 @@
-*.pbix
-*.pbit
-.pbi/localSettings.json
-.pbi/cache.abf
+**/.pbi/localSettings.json
+**/.pbi/cache.abf
 __pycache__/
 .DS_Store
